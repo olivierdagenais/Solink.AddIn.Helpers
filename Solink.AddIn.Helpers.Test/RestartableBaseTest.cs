@@ -8,13 +8,6 @@ using Moq;
 
 namespace Solink.AddIn.Helpers.Test
 {
-    public interface IThing
-    {
-        int ComputeAnswerToLifeAndUniverseEverything();
-        void AddToList(IList<string> strings);
-        int Id { get; }
-    }
-
     /// <summary>
     /// A class to test <see cref="RestartableBase{T,TException}"/>.
     /// </summary>
