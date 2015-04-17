@@ -9,5 +9,12 @@ namespace Solink.AddIn.Helpers
             var result = new CodeCompileUnit();
             return result;
         }
+
+        internal static CodeNamespace CreateNamespace(CodeCompileUnit compileUnit, string namespaceName)
+        {
+            var result = new CodeNamespace(namespaceName);
+            compileUnit.Namespaces.Add(result);
+            return result;
+        }
     }
 }
