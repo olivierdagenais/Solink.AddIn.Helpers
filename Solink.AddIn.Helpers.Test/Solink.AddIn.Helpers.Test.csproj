@@ -55,6 +55,12 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Solink.AddIn.Helpers\Solink.AddIn.Helpers.csproj">
+      <Project>{467f1fbc-b14c-4a17-aa5f-a81836d10720}</Project>
+      <Name>Solink.AddIn.Helpers</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
