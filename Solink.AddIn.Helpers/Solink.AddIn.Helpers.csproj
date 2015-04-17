@@ -41,6 +41,7 @@
     <Compile Include="AddInFacade.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RestartableAddIn.cs" />
+    <Compile Include="RestartableAddInGenerator.cs" />
     <Compile Include="RestartableBase.cs" />
   </ItemGroup>
   <ItemGroup>
