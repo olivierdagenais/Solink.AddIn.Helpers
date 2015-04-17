@@ -1,4 +1,6 @@
-﻿using System.CodeDom;
+﻿using System;
+using System.AddIn.Hosting;
+using System.CodeDom;
 using System.Reflection;
 
 namespace Solink.AddIn.Helpers
@@ -34,6 +36,32 @@ namespace Solink.AddIn.Helpers
             result.BaseTypes.Add(hostViewType);
 
             @namespace.Types.Add(result);
+            return result;
+        }
+
+        internal static CodeConstructor CreateConstructor(CodeTypeDeclaration @class)
+        {
+            var result = new CodeConstructor
+            {
+                Attributes = MemberAttributes.Public,
+            };
+            CreateMethodParameter(result, typeof (AddInFacade), "facade");
+            CreateMethodParameter(result, typeof (AddInToken), "token");
+            CreateMethodParameter(result, typeof (Platform), "platform");
+
+            result.BaseConstructorArgs.Add(new CodeArgumentReferenceExpression("facade"));
+            result.BaseConstructorArgs.Add(new CodeArgumentReferenceExpression("token"));
+            result.BaseConstructorArgs.Add(new CodeArgumentReferenceExpression("platform"));
+
+            @class.Members.Add(result);
+            return result;
+        }
+
+        internal static CodeParameterDeclarationExpression CreateMethodParameter(CodeMemberMethod method, Type type, string name)
+        {
+            var result = new CodeParameterDeclarationExpression(type, name);
+
+            method.Parameters.Add(result);
             return result;
         }
     }
