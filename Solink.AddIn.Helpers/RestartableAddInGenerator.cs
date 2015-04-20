@@ -132,6 +132,40 @@ namespace Solink.AddIn.Helpers
             return result;
         }
 
+
+        internal static CodeMemberMethod CreateFuncMethod(CodeTypeDeclaration @class, string methodName, IEnumerable<Tuple<Type, String>> methodParameters, Type returnType)
+        {
+            var result = new CodeMemberMethod
+            {
+                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+                Attributes = MemberAttributes.Public | MemberAttributes.Final,
+                Name = methodName,
+                ReturnType = new CodeTypeReference(returnType),
+            };
+
+            // This is to enumerate methodParameters twice
+            var parameters = methodParameters as IList<Tuple<Type, string>>
+                ?? methodParameters.ToList();
+            foreach (var tuple in parameters)
+            {
+                var parameterType = tuple.Item1;
+                var parameterName = tuple.Item2;
+                CreateMethodParameter(result, parameterType, parameterName);
+            }
+            var lambdaExpression = GenerateLambdaMethodCallExpression(methodName, parameters);
+            var invokeAction = new CodeMethodReturnStatement(
+                new CodeMethodInvokeExpression(
+                    new CodeBaseReferenceExpression(),
+                    "Func",
+                    lambdaExpression
+                )
+            );
+            result.Statements.Add(invokeAction);
+
+            @class.Members.Add(result);
+            return result;
+        }
+
         /// <summary>
         /// Generate something like:
         /// <code>_ => _.methodName(methodParameters)</code>
