@@ -10,6 +10,9 @@ namespace Solink.AddIn.Helpers
 {
     public class RestartableAddInGenerator
     {
+        internal const string BaseActionMethodName = "Action";
+        internal const string BaseFuncMethodName = "Func";
+
         private static readonly string RestartableAddInTypeName = typeof (RestartableAddIn<>).FullName;
 
         internal static CodeCompileUnit CreateCompileUnit()
@@ -135,7 +138,7 @@ namespace Solink.AddIn.Helpers
             var methodExpression = 
                 new CodeMethodInvokeExpression(
                     new CodeBaseReferenceExpression(),
-                    isFunction ? "Func" : "Action",
+                    isFunction ? BaseFuncMethodName : BaseActionMethodName,
                     lambdaExpression
             );
             CodeStatement methodStatement;
@@ -206,7 +209,7 @@ namespace Solink.AddIn.Helpers
             var getStatements = new CodeMethodReturnStatement(
                 new CodeMethodInvokeExpression(
                     new CodeBaseReferenceExpression(),
-                    "Func",
+                    BaseFuncMethodName,
                     lambdaGetExpression
                 )
             );
@@ -217,7 +220,7 @@ namespace Solink.AddIn.Helpers
                 var lambdaSetExpression = GenerateLambdaPropertySetExpression(propertyName);
                 var setStatements = new CodeMethodInvokeExpression(
                     new CodeBaseReferenceExpression(),
-                    "Action",
+                    BaseActionMethodName,
                     lambdaSetExpression
                 );
                 result.SetStatements.Add(setStatements);
