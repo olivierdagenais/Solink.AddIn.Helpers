@@ -120,23 +120,31 @@ namespace Solink.AddIn.Helpers
                 var parameterName = tuple.Item2;
                 CreateMethodParameter(result, parameterType, parameterName);
             }
-            // Generate something like:
-            // base.Action(_ => _.methodName(methodParameters));
-            // ...using a snippet, because CodeDOM doesn't seem support this directly
-            var sb = new StringBuilder();
-            sb.Append("_ => _.").Append(methodName);
-            sb.Append("(");
-            sb.Append(String.Join(", ", parameters.Select(tuple => tuple.Item2)));
-            sb.Append(")");
+            var lambdaExpression = GenerateLambdaMethodCallExpression(methodName, parameters);
             var invokeAction = new CodeMethodInvokeExpression(
                 new CodeBaseReferenceExpression(),
                 "Action",
-                new CodeSnippetExpression(sb.ToString())
+                lambdaExpression
             );
             result.Statements.Add(invokeAction);
 
             @class.Members.Add(result);
             return result;
+        }
+
+        /// <summary>
+        /// Generate something like:
+        /// <code>_ => _.methodName(methodParameters)</code>
+        /// using a snippet, because CodeDOM doesn't seem support this directly.
+        /// </summary>
+        internal static CodeExpression GenerateLambdaMethodCallExpression(string methodName, IList<Tuple<Type, string>> parameters)
+        {
+            var sb = new StringBuilder();
+            sb.Append("_ => _.").Append(methodName);
+            sb.Append("(");
+            sb.Append(String.Join(", ", parameters.Select(tuple => tuple.Item2)));
+            sb.Append(")");
+            return new CodeSnippetExpression(sb.ToString());
         }
     }
 }
