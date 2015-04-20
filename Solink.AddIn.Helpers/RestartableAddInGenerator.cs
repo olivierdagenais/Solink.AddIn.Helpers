@@ -1,6 +1,7 @@
 ﻿using System;
 using System.AddIn.Hosting;
 using System.CodeDom;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Solink.AddIn.Helpers
@@ -45,23 +46,33 @@ namespace Solink.AddIn.Helpers
             {
                 Attributes = MemberAttributes.Public,
             };
-            CreateMethodParameter(result, typeof (AddInFacade), "facade");
-            CreateMethodParameter(result, typeof (AddInToken), "token");
-            CreateMethodParameter(result, typeof (Platform), "platform");
+            var parameters = AddConstructorParameters(result);
 
-            result.BaseConstructorArgs.Add(new CodeArgumentReferenceExpression("facade"));
-            result.BaseConstructorArgs.Add(new CodeArgumentReferenceExpression("token"));
-            result.BaseConstructorArgs.Add(new CodeArgumentReferenceExpression("platform"));
+            result.BaseConstructorArgs.AddRange(parameters);
 
             @class.Members.Add(result);
             return result;
         }
 
-        internal static CodeParameterDeclarationExpression CreateMethodParameter(CodeMemberMethod method, Type type, string name)
+        internal static CodeExpression[] AddConstructorParameters(CodeMemberMethod method)
         {
-            var result = new CodeParameterDeclarationExpression(type, name);
+            var list = new List<CodeExpression>
+            {
+                CreateMethodParameter(method, typeof (AddInFacade), "facade"),
+                CreateMethodParameter(method, typeof (AddInToken), "token"),
+                CreateMethodParameter(method, typeof (Platform), "platform"),
+            };
 
-            method.Parameters.Add(result);
+            return list.ToArray();
+        }
+
+        internal static CodeArgumentReferenceExpression CreateMethodParameter(CodeMemberMethod method, Type type, string name)
+        {
+            var parameter = new CodeParameterDeclarationExpression(type, name);
+
+            method.Parameters.Add(parameter);
+
+            var result = new CodeArgumentReferenceExpression(name);
             return result;
         }
 
@@ -74,17 +85,13 @@ namespace Solink.AddIn.Helpers
                 Name = "Factory",
                 ReturnType = new CodeTypeReference(hostViewFullName),
             };
-            CreateMethodParameter(result, typeof (AddInFacade), "facade");
-            CreateMethodParameter(result, typeof (AddInToken), "token");
-            CreateMethodParameter(result, typeof (Platform), "platform");
+            var parameters = AddConstructorParameters(result);
 
             var rs = new CodeMethodReturnStatement
             {
                 Expression = new CodeObjectCreateExpression(
                     new CodeTypeReference(@class.Name),
-                    new CodeArgumentReferenceExpression("facade"),
-                    new CodeArgumentReferenceExpression("token"),
-                    new CodeArgumentReferenceExpression("platform")
+                    parameters
                 ),
             };
             result.Statements.Add(rs);
