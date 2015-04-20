@@ -33,6 +33,7 @@ namespace Solink.AddIn.Helpers.Test
             public int Id
             {
                 get { return Func(_ => _.Id); }
+                set { Action(_ => _.Id = value); }
             }
         }
 

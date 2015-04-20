@@ -146,5 +146,64 @@ namespace Solink.AddIn.Helpers
             sb.Append(")");
             return new CodeSnippetExpression(sb.ToString());
         }
+
+        /// <summary>
+        /// Generate something like:
+        /// <code>_ => _.propertyName</code>
+        /// using a snippet, because CodeDOM doesn't seem support this directly.
+        /// </summary>
+        internal static CodeExpression GenerateLambdaPropertyGetExpression(string propertyName)
+        {
+            var sb = new StringBuilder();
+            sb.Append("_ => _.").Append(propertyName);
+            return new CodeSnippetExpression(sb.ToString());
+        }
+
+        /// <summary>
+        /// Generate something like:
+        /// <code>_ => _.propertyName = value</code>
+        /// using a snippet, because CodeDOM doesn't seem support this directly.
+        /// </summary>
+        internal static CodeExpression GenerateLambdaPropertySetExpression(string propertyName)
+        {
+            var sb = new StringBuilder();
+            sb.Append("_ => _.").Append(propertyName).Append(" = value");
+            return new CodeSnippetExpression(sb.ToString());
+        }
+
+        internal static CodeMemberProperty CreateProperty(CodeTypeDeclaration @class, string propertyName, Type propertyType, bool includeSet)
+        {
+            var result = new CodeMemberProperty
+            {
+                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+                Attributes = MemberAttributes.Public | MemberAttributes.Final,
+                Name = propertyName,
+                Type = new CodeTypeReference(propertyType),
+            };
+
+            var lambdaGetExpression = GenerateLambdaPropertyGetExpression(propertyName);
+            var getStatements = new CodeMethodReturnStatement(
+                new CodeMethodInvokeExpression(
+                    new CodeBaseReferenceExpression(),
+                    "Func",
+                    lambdaGetExpression
+                )
+            );
+            result.GetStatements.Add(getStatements);
+
+            if (includeSet)
+            {
+                var lambdaSetExpression = GenerateLambdaPropertySetExpression(propertyName);
+                var setStatements = new CodeMethodInvokeExpression(
+                    new CodeBaseReferenceExpression(),
+                    "Action",
+                    lambdaSetExpression
+                );
+                result.SetStatements.Add(setStatements);
+            }
+
+            @class.Members.Add(result);
+            return result;
+        }
     }
 }

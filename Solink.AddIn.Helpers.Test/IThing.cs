@@ -6,6 +6,6 @@ namespace Solink.AddIn.Helpers.Test
     {
         int ComputeAnswerToLifeAndUniverseEverything();
         void AddToList(IList<string> strings);
-        int Id { get; }
+        int Id { get; set; }
     }
 }
