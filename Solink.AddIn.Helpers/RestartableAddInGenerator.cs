@@ -104,32 +104,7 @@ namespace Solink.AddIn.Helpers
 
         internal static CodeMemberMethod CreateActionMethod(CodeTypeDeclaration @class, string methodName, IEnumerable<Tuple<Type, String>> methodParameters)
         {
-            var result = new CodeMemberMethod
-            {
-                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-                Attributes = MemberAttributes.Public | MemberAttributes.Final,
-                Name = methodName,
-            };
-
-            // This is to enumerate methodParameters twice
-            var parameters = methodParameters as IList<Tuple<Type, string>>
-                ?? methodParameters.ToList();
-            foreach (var tuple in parameters)
-            {
-                var parameterType = tuple.Item1;
-                var parameterName = tuple.Item2;
-                CreateMethodParameter(result, parameterType, parameterName);
-            }
-            var lambdaExpression = GenerateLambdaMethodCallExpression(methodName, parameters);
-            var invokeAction = new CodeMethodInvokeExpression(
-                new CodeBaseReferenceExpression(),
-                "Action",
-                lambdaExpression
-            );
-            result.Statements.Add(invokeAction);
-
-            @class.Members.Add(result);
-            return result;
+            return CreateFuncMethod(@class, methodName, methodParameters, null);
         }
 
 
@@ -140,8 +115,12 @@ namespace Solink.AddIn.Helpers
                 // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
                 Attributes = MemberAttributes.Public | MemberAttributes.Final,
                 Name = methodName,
-                ReturnType = new CodeTypeReference(returnType),
             };
+            var isFunction = returnType != null;
+            if (isFunction)
+            {
+                result.ReturnType = new CodeTypeReference(returnType);
+            }
 
             // This is to enumerate methodParameters twice
             var parameters = methodParameters as IList<Tuple<Type, string>>
@@ -153,14 +132,22 @@ namespace Solink.AddIn.Helpers
                 CreateMethodParameter(result, parameterType, parameterName);
             }
             var lambdaExpression = GenerateLambdaMethodCallExpression(methodName, parameters);
-            var invokeAction = new CodeMethodReturnStatement(
+            var methodExpression = 
                 new CodeMethodInvokeExpression(
                     new CodeBaseReferenceExpression(),
-                    "Func",
+                    isFunction ? "Func" : "Action",
                     lambdaExpression
-                )
             );
-            result.Statements.Add(invokeAction);
+            CodeStatement methodStatement;
+            if (isFunction)
+            {
+                methodStatement = new CodeMethodReturnStatement(methodExpression);
+            }
+            else
+            {
+                methodStatement = new CodeExpressionStatement(methodExpression);
+            }
+            result.Statements.Add(methodStatement);
 
             @class.Members.Add(result);
             return result;
