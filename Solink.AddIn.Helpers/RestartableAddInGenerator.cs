@@ -2,7 +2,9 @@
 using System.AddIn.Hosting;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace Solink.AddIn.Helpers
 {
@@ -95,6 +97,43 @@ namespace Solink.AddIn.Helpers
                 ),
             };
             result.Statements.Add(rs);
+
+            @class.Members.Add(result);
+            return result;
+        }
+
+        internal static CodeMemberMethod CreateActionMethod(CodeTypeDeclaration @class, string methodName, IEnumerable<Tuple<Type, String>> methodParameters)
+        {
+            var result = new CodeMemberMethod
+            {
+                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+                Attributes = MemberAttributes.Public | MemberAttributes.Final,
+                Name = methodName,
+            };
+
+            // This is to enumerate methodParameters twice
+            var parameters = methodParameters as IList<Tuple<Type, string>>
+                ?? methodParameters.ToList();
+            foreach (var tuple in parameters)
+            {
+                var parameterType = tuple.Item1;
+                var parameterName = tuple.Item2;
+                CreateMethodParameter(result, parameterType, parameterName);
+            }
+            // Generate something like:
+            // base.Action(_ => _.methodName(methodParameters));
+            // ...using a snippet, because CodeDOM doesn't seem support this directly
+            var sb = new StringBuilder();
+            sb.Append("_ => _.").Append(methodName);
+            sb.Append("(");
+            sb.Append(String.Join(", ", parameters.Select(tuple => tuple.Item2)));
+            sb.Append(")");
+            var invokeAction = new CodeMethodInvokeExpression(
+                new CodeBaseReferenceExpression(),
+                "Action",
+                new CodeSnippetExpression(sb.ToString())
+            );
+            result.Statements.Add(invokeAction);
 
             @class.Members.Add(result);
             return result;
