@@ -64,5 +64,33 @@ namespace Solink.AddIn.Helpers
             method.Parameters.Add(result);
             return result;
         }
+
+        internal static CodeMemberMethod CreateFactoryMethod(CodeTypeDeclaration @class, string hostViewFullName)
+        {
+            var result = new CodeMemberMethod
+            {
+                // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+                Attributes = MemberAttributes.Public | MemberAttributes.Static,
+                Name = "Factory",
+                ReturnType = new CodeTypeReference(hostViewFullName),
+            };
+            CreateMethodParameter(result, typeof (AddInFacade), "facade");
+            CreateMethodParameter(result, typeof (AddInToken), "token");
+            CreateMethodParameter(result, typeof (Platform), "platform");
+
+            var rs = new CodeMethodReturnStatement
+            {
+                Expression = new CodeObjectCreateExpression(
+                    new CodeTypeReference(@class.Name),
+                    new CodeArgumentReferenceExpression("facade"),
+                    new CodeArgumentReferenceExpression("token"),
+                    new CodeArgumentReferenceExpression("platform")
+                ),
+            };
+            result.Statements.Add(rs);
+
+            @class.Members.Add(result);
+            return result;
+        }
     }
 }
