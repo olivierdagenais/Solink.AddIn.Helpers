@@ -307,5 +307,19 @@ namespace Solink.Sample
 ";
             AssertGeneratedCode(expected, actual);
         }
+
+        [TestMethod]
+        public void GenerateClassNameIThing()
+        {
+            var actual = RestartableAddInGenerator.GenerateClassName("IThing");
+            Assert.AreEqual("RestartableThing", actual);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void GenerateClassNameThing()
+        {
+            RestartableAddInGenerator.GenerateClassName("Thing");
+        }
     }
 }

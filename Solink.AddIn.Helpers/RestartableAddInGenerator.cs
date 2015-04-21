@@ -12,6 +12,7 @@ namespace Solink.AddIn.Helpers
     {
         internal const string BaseActionMethodName = "Action";
         internal const string BaseFuncMethodName = "Func";
+        internal const string ClassNamePrefix = "Restartable";
 
         private static readonly string RestartableAddInTypeName = typeof (RestartableAddIn<>).FullName;
 
@@ -227,6 +228,19 @@ namespace Solink.AddIn.Helpers
             }
 
             @class.Members.Add(result);
+            return result;
+        }
+
+        internal static string GenerateClassName(string interfaceName)
+        {
+            if (!interfaceName.StartsWith("I", StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException("interfaceName does not start with 'I'", "interfaceName");
+            }
+            var restOfInterfaceName = interfaceName.Substring(1);
+            var sb = new StringBuilder(ClassNamePrefix.Length + restOfInterfaceName.Length);
+            sb.Append(ClassNamePrefix).Append(restOfInterfaceName);
+            var result = sb.ToString();
             return result;
         }
     }
