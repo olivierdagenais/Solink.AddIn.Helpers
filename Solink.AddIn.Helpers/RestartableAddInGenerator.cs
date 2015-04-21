@@ -106,12 +106,6 @@ namespace Solink.AddIn.Helpers
             return result;
         }
 
-        internal static CodeMemberMethod CreateActionMethod(CodeTypeDeclaration @class, string methodName, IEnumerable<Tuple<Type, String>> methodParameters)
-        {
-            return CreateFuncMethod(@class, methodName, methodParameters, null);
-        }
-
-
         internal static CodeMemberMethod CreateFuncMethod(CodeTypeDeclaration @class, string methodName, IEnumerable<Tuple<Type, String>> methodParameters, Type returnType)
         {
             var result = new CodeMemberMethod
