@@ -120,7 +120,7 @@ namespace Solink.AddIn.Helpers
                 Attributes = MemberAttributes.Public | MemberAttributes.Final,
                 Name = methodName,
             };
-            var isFunction = returnType != null;
+            var isFunction = returnType != null && returnType != typeof(void);
             if (isFunction)
             {
                 result.ReturnType = new CodeTypeReference(returnType);
