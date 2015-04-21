@@ -3,6 +3,7 @@ using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -83,6 +84,40 @@ namespace Solink.Sample
             }
             var actual = sb.ToString();
             Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void Generate()
+        {
+            var pathToOurAssembly = Assembly.GetExecutingAssembly().Location;
+            var sourceAssembly = new FileInfo(pathToOurAssembly);
+
+            var randomFileName = Path.GetRandomFileName();
+            var tempPath = Path.Combine(Path.GetTempPath(), randomFileName);
+            var tempDirectoryInfo = new DirectoryInfo(tempPath);
+            tempDirectoryInfo.Create();
+
+            try
+            {
+                var cut = new RestartableAddInGenerator(NamespaceName, sourceAssembly, tempDirectoryInfo);
+
+                cut.Generate();
+
+                var generatedFile = Path.Combine(tempDirectoryInfo.FullName, "RestartableThing.cs");
+                var generatedFileInfo = new FileInfo(generatedFile);
+                Assert.IsTrue(generatedFileInfo.Exists);
+
+                var actual = File.ReadAllText(generatedFileInfo.FullName);
+                Assert.AreEqual(ExpectedRestartableThing, actual);
+            }
+            finally
+            {
+                try
+                {
+                    tempDirectoryInfo.Delete(true);
+                }
+                catch (IOException) { /* ignore */ }
+            }
         }
 
         [TestMethod]

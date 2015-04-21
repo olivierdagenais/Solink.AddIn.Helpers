@@ -1,7 +1,9 @@
 ﻿using System;
 using System.AddIn.Hosting;
 using System.CodeDom;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -13,14 +15,63 @@ namespace Solink.AddIn.Helpers
         internal const string BaseActionMethodName = "Action";
         internal const string BaseFuncMethodName = "Func";
         internal const string ClassNamePrefix = "Restartable";
+        internal const string GeneratedClassNameKey = "GeneratedClassName";
 
         private static readonly string RestartableAddInTypeName = typeof (RestartableAddIn<>).FullName;
+
+        private readonly string _namespaceName;
+        private readonly FileInfo _sourceAssembly;
+        private readonly DirectoryInfo _targetFolder;
+        private readonly CodeDomProvider _provider = CodeDomProvider.CreateProvider("CSharp");
+        private readonly CodeGeneratorOptions _options = new CodeGeneratorOptions
+        {
+            BracingStyle = "C",
+        };
+
+        public RestartableAddInGenerator(string namespaceName, FileInfo sourceAssembly, DirectoryInfo targetFolder)
+        {
+            _namespaceName = namespaceName;
+            _sourceAssembly = sourceAssembly;
+            _targetFolder = targetFolder;
+        }
+
+        public void Generate()
+        {
+            var assembly = Assembly.ReflectionOnlyLoadFrom(_sourceAssembly.FullName);
+            Generate(assembly);
+        }
+
+        internal void Generate(Assembly sourceAssembly)
+        {
+            var exportedTypes = sourceAssembly.GetExportedTypes();
+            var exportedInterfaces = exportedTypes.Where(t => t.IsInterface);
+            foreach (var interfaceType in exportedInterfaces)
+            {
+               Generate(interfaceType); 
+            }
+        }
+
+        internal void Generate(Type type)
+        {
+            var compileUnit = GenerateFromType(_namespaceName, type);
+
+            var generatedClassName = (string)compileUnit.UserData[GeneratedClassNameKey];
+            var fileNameExt = Path.ChangeExtension(generatedClassName, ".cs");
+            var path = Path.Combine(_targetFolder.FullName, fileNameExt);
+
+            using(var s = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
+            using (var sw = new StreamWriter(s, Encoding.UTF8))
+            {
+                _provider.GenerateCodeFromCompileUnit(compileUnit, sw, _options);
+            }
+        }
 
         internal static CodeCompileUnit GenerateFromType(string namespaceName, Type type)
         {
             var className = GenerateClassName(type.Name);
             var hostViewFullName = type.FullName;
             var result = CreateCompileUnit();
+            result.UserData[GeneratedClassNameKey] = className;
 
             var ns = CreateNamespace(result, namespaceName);
             var @class = CreateClass(ns, className, hostViewFullName);
