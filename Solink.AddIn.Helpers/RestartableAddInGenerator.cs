@@ -16,6 +16,72 @@ namespace Solink.AddIn.Helpers
 
         private static readonly string RestartableAddInTypeName = typeof (RestartableAddIn<>).FullName;
 
+        internal static CodeCompileUnit GenerateFromType(string namespaceName, Type type)
+        {
+            var className = GenerateClassName(type.Name);
+            var hostViewFullName = type.FullName;
+            var result = CreateCompileUnit();
+
+            var ns = CreateNamespace(result, namespaceName);
+            var @class = CreateClass(ns, className, hostViewFullName);
+            CreateConstructor(@class);
+            CreateFactoryMethod(@class, hostViewFullName);
+
+            foreach (var memberInfo in type.GetMembers())
+            {
+                WrapMember(@class, memberInfo);
+            }
+
+            return result;
+        }
+
+        internal static void WrapMember(CodeTypeDeclaration @class, MemberInfo memberInfo)
+        {
+            switch (memberInfo.MemberType)
+            {
+                case MemberTypes.Method:
+                    var methodInfo = (MethodInfo)memberInfo;
+                    // This excludes get_* and set_* methods generated from properties
+                    if (!methodInfo.Attributes.HasFlag(MethodAttributes.SpecialName))
+                    {
+                        WrapMethod(@class, methodInfo);
+                    }
+                    break;
+                case MemberTypes.Property:
+                    var propertyInfo = (PropertyInfo) memberInfo;
+                    WrapProperty(@class, propertyInfo);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("memberInfo", memberInfo.MemberType, "The interface contains a member of a type that is not supported.");
+            }
+        }
+
+        internal static CodeMemberProperty WrapProperty(CodeTypeDeclaration @class, PropertyInfo propertyInfo)
+        {
+            var propertyName = propertyInfo.Name;
+            var propertyType = propertyInfo.PropertyType;
+            var includeSet = propertyInfo.CanWrite;
+
+            var result = CreateProperty(@class, propertyName, propertyType, includeSet);
+            return result;
+        }
+
+        internal static CodeMemberMethod WrapMethod(CodeTypeDeclaration @class, MethodInfo methodInfo)
+        {
+            var methodName = methodInfo.Name;
+            var parameterInfos = methodInfo.GetParameters();
+            var methodParameters = parameterInfos.Select(ConvertToTuple);
+            var returnType = methodInfo.ReturnType;
+
+            var result = CreateFuncMethod(@class, methodName, methodParameters, returnType);
+            return result;
+        }
+
+        internal static Tuple<Type, string> ConvertToTuple(ParameterInfo pi)
+        {
+            return Tuple.Create(pi.ParameterType, pi.Name);
+        }
+
         internal static CodeCompileUnit CreateCompileUnit()
         {
             var result = new CodeCompileUnit();
