@@ -56,7 +56,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="IThing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RestartableAddInGeneratorTest.cs" />
     <Compile Include="RestartableBaseTest.cs" />
   </ItemGroup>
   <ItemGroup>

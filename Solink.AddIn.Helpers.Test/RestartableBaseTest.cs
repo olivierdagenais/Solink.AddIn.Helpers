@@ -8,13 +8,6 @@ using Moq;
 
 namespace Solink.AddIn.Helpers.Test
 {
-    public interface IThing
-    {
-        int ComputeAnswerToLifeAndUniverseEverything();
-        void AddToList(IList<string> strings);
-        int Id { get; }
-    }
-
     /// <summary>
     /// A class to test <see cref="RestartableBase{T,TException}"/>.
     /// </summary>
@@ -40,6 +33,7 @@ namespace Solink.AddIn.Helpers.Test
             public int Id
             {
                 get { return Func(_ => _.Id); }
+                set { Action(_ => _.Id = value); }
             }
         }
 
