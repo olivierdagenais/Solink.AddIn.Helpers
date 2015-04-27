@@ -9,7 +9,6 @@
         <Message Importance="high" Text="Compiling..." />
         <MSBuild
             Projects="Solink.AddIn.Helpers.sln"
-            ToolsVersion="12.0"
             Properties="Configuration=$(Configuration)"
         />
     </Target>
