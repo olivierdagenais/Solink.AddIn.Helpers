@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="All" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    </PropertyGroup>
+
+    <Target Name="Compile">
+        <Message Importance="high" Text="Compiling..." />
+        <MSBuild
+            Projects="Solink.AddIn.Helpers.sln"
+            ToolsVersion="12.0"
+            Properties="Configuration=$(Configuration)"
+        />
+    </Target>
+
+    <Target Name="UnitTest" DependsOnTargets="Compile">
+        <Message Importance="high" Text="Testing..." />
+        <PropertyGroup>
+            <VisualStudioFolder>$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\12.0@ShellFolder)</VisualStudioFolder>
+            <VisualStudioCommon7Ide>$([System.IO.Path]::Combine("$(VisualStudioFolder)", "Common7", "IDE"))</VisualStudioCommon7Ide>
+            <VsTestFolder>$([System.IO.Path]::Combine("$(VisualStudioCommon7Ide)", "CommonExtensions", "Microsoft", "TestWindow"))</VsTestFolder>
+        </PropertyGroup>
+        <Exec
+            Command='"$(VsTestFolder)/vstest.console.exe" Solink.AddIn.Helpers.Test/bin/$(Configuration)/Solink.AddIn.Helpers.Test.dll /InIsolation /Logger:trx'
+        />
+    </Target>
+
+    <Target Name="Package" DependsOnTargets="Compile">
+        <Message Importance="high" Text="Packaging..." />
+        <Exec
+            Command='$(MSBuildThisFileDirectory).nuget/NuGet.exe pack -Build -Symbols -Properties Configuration=Debug'
+            WorkingDirectory="Solink.AddIn.Helpers"
+        />
+        <Exec
+            Command='$(MSBuildThisFileDirectory).nuget/NuGet.exe pack -Build -Properties Configuration=$(Configuration)'
+            WorkingDirectory="Solink.AddIn.Helpers"
+        />
+    </Target>
+
+    <Target Name="All" DependsOnTargets="UnitTest;Package">
+    </Target>
+
+</Project>
